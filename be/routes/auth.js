@@ -1,6 +1,6 @@
 const express = require('express');
 const bcrypt = require('bcryptjs');
-const jwt = require('../models/User');
+const jwt = require('jsonwebtoken');
 const { OAuth2Client } = require('google-auth-library');
 const dotenv = require('dotenv');
 const UserActivation = require('../models/UserActivation');
@@ -34,6 +34,47 @@ router.post('/login', async (req, res) => {
 router.get('/login', async (req, res) => {
     console.log("get here!!! ==============>");
 }
-)
+);
+
+router.post('/register', async (req, res) => {
+    const { username, email, password, confirmPassword } = req.body;
+
+    if (!username || !email || !password || !confirmPassword) {
+        return res.status(400).json({ msg: "Please fill in all fields" });
+    }
+
+    if (password !== confirmPassword) {
+        return res.status(400).json({ msg: "Passwords do not match" });
+    }
+
+    if (password.length < 6) {
+        return res.status(400).json({ msg: "Password must be at least 6 characters" });
+    }
+
+    try {
+        const existingUser = await UserActivation.findOne({ email });
+        if (existingUser) {
+            return res.status(400).json({ msg: "User already exists with this email" });
+        }
+
+        const salt = await bcrypt.genSalt(10);
+        const hashedPassword = await bcrypt.hash(password, salt);
+
+        const newUser = new UserActivation({
+            username,
+            email,
+            password: hashedPassword
+        });
+
+        await newUser.save();
+
+        const token = jwt.sign({ id: newUser._id }, process.env.JWT_SECRET, { expiresIn: '1h' });
+
+        res.json({ token, msg: "User registered successfully" });
+    } catch (err) {
+        console.error(err.message);
+        res.status(500).json({ msg: "Server error" });
+    }
+});
 
 module.exports = router;
