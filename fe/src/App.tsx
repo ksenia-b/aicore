@@ -3,18 +3,35 @@ import Login from "./components/Login.jsx";
 import Registration from "./components/Registration.jsx";
 import Threads from "./components/Threads.jsx";
 import Thread from "./components/Thread.jsx";
+import AuthRoute from './components/AuthRoute'; // To protect routes that require authentication
+
 
 function App() {
   return <>
-    <Router>
-      <Routes>
-        <Route path="/" element={<Navigate to="/threads" />}></Route>
-        <Route path="/login" element={<Login />}></Route>
-        <Route path="/registration" element={<Registration />}></Route>
-        <Route path="/threads" element={<Threads />}></Route>
-        <Route path="/threads/:threadId" element={<Thread />}></Route>
-      </Routes>
-    </Router>
+
+    <Routes>
+      {/* <Route path="/" element={<Navigate to="/threads" />}></Route> */}
+      <Route path="/login" element={<Login />}></Route>
+      <Route path="/registration" element={<Registration />}></Route>
+      <Route
+        path="/threads"
+        element={
+          <AuthRoute>
+            <Threads />
+          </AuthRoute>
+        }
+      ></Route>
+      <Route
+        path="/threads/:threadId"
+        element={
+          <AuthRoute>
+            <Thread />
+          </AuthRoute>
+        }
+      ></Route>
+      <Route path="*" element={<Navigate to="/login" />}></Route>
+    </Routes>
+
   </>;
 }
 
