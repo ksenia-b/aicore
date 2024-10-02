@@ -9,6 +9,40 @@ dotenv.config();
 const router = express.Router();
 // const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
+router.post('/api/auth/google-login', async (req, res) => {
+    const { idToken } = req.body;
+
+    try {
+        const ticket = await client.verifyIdToken({
+            idToken,
+            audience: process.env.GOOGLE_CLIENT_ID,
+        });
+
+        const payload = ticket.getPayload();
+        const { email, sub: googleId } = payload;
+
+        let user = await User.findOne({ googleId });
+        if (!user) {
+            user = new User({
+                username: email.split('@')[0],
+                email,
+                googleId,
+            });
+            await user.save();
+        }
+
+        const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, {
+            expiresIn: '1h',
+        });
+
+        res.json({ token });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ msg: 'Internal server error' });
+    }
+});
+
+
 router.post('/login', async (req, res) => {
     console.log("here 1", req.body);
     const { email, password } = req.body;
@@ -31,10 +65,6 @@ router.post('/login', async (req, res) => {
     }
 })
 
-router.get('/login', async (req, res) => {
-    console.log("get here!!! ==============>");
-}
-);
 
 router.post('/register', async (req, res) => {
     const { username, email, password, confirmPassword } = req.body;

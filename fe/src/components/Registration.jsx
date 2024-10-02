@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
-import { GoogleOAuthProvider, GoogleLogin } from '@react-oauth/google';
 import styled from 'styled-components';
 
 const RegisterContainer = styled.div`
@@ -71,18 +70,6 @@ function Registration() {
     const [error, setError] = useState('');
     const navigate = useNavigate();
 
-    const handleGoogleLoginSuccess = async (response) => {
-        try {
-            const { credential } = response;
-            const res = await axios.post('/api/auth/google-login', { token: credential });
-            localStorage.setItem('token', res.data.token);
-            navigate('/threads');
-        } catch (err) {
-            setError(err.response?.data?.msg || 'Error during Google login');
-        }
-    };
-
-
     const handleRegister = async (e) => {
         e.preventDefault();
         if (password !== confirmPassword) {
@@ -104,54 +91,47 @@ function Registration() {
     };
 
     return (
-        <GoogleOAuthProvider clientId={process.env.GOOGLE_CLIENT_ID}>
-            <RegisterContainer>
-                <RegisterForm onSubmit={handleRegister}>
-                    <Title>Register</Title>
-                    {error && <ErrorMessage>{error}</ErrorMessage>}
-                    <Input
-                        type="text"
-                        placeholder="Username"
-                        value={username}
-                        onChange={(e) => setUsername(e.target.value)}
-                        required
-                    />
-                    <Input
-                        type="email"
-                        placeholder="Email"
-                        value={email}
-                        onChange={(e) => setEmail(e.target.value)}
-                        required
-                    />
-                    <Input
-                        type="password"
-                        placeholder="Password"
-                        value={password}
-                        onChange={(e) => setPassword(e.target.value)}
-                        required
-                    />
-                    <Input
-                        type="password"
-                        placeholder="Confirm Password"
-                        value={confirmPassword}
-                        onChange={(e) => setConfirmPassword(e.target.value)}
-                        required
-                    />
-                    <Button type="submit">Register</Button>
-                </RegisterForm>
-                <AccountText>
-                    Already have an account?  <a href='/login' >
-                        Login
-                    </a>
-                </AccountText>
-                <div style={{ marginTop: '20px' }}>
-                    <GoogleLogin
-                        onSuccess={handleGoogleLoginSuccess}
-                        onError={() => setError('Google login failed')}
-                    />
-                </div>
-            </RegisterContainer>
-        </GoogleOAuthProvider>
+        <RegisterContainer>
+            <RegisterForm onSubmit={handleRegister}>
+                <Title>Register</Title>
+                {error && <ErrorMessage>{error}</ErrorMessage>}
+                <Input
+                    type="text"
+                    placeholder="Username"
+                    value={username}
+                    onChange={(e) => setUsername(e.target.value)}
+                    required
+                />
+                <Input
+                    type="email"
+                    placeholder="Email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    required
+                />
+                <Input
+                    type="password"
+                    placeholder="Password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    required
+                />
+                <Input
+                    type="password"
+                    placeholder="Confirm Password"
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    required
+                />
+                <Button type="submit">Register</Button>
+            </RegisterForm>
+            <AccountText>
+                Already have an account?  <a href='/login' >
+                    Login
+                </a>
+            </AccountText>
+
+        </RegisterContainer>
     );
 }
 

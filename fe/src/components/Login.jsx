@@ -1,9 +1,11 @@
 import { useState } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
+import { GoogleLogin } from '@react-oauth/google';
+import { GoogleOAuthProvider } from '@react-oauth/google';
 import styled from 'styled-components';
 
-// Styled Components
+
 const LoginContainer = styled.div`
   display: flex;
   flex-direction: column;
@@ -81,6 +83,7 @@ function Login() {
     const [password, setPassword] = useState('');
     const [error, setError] = useState('');
     const navigate = useNavigate();
+    console.log(import.meta.env.VITE_GOOGLE_CLIENT_ID);
 
     const handleLogin = async (e) => {
         e.preventDefault();
@@ -92,37 +95,60 @@ function Login() {
             setError(err.response.data.msg || 'Invalid email or password');
         }
     };
-    const handleRegisterClick = () => {
-        navigate('/register');
+
+    const handleGoogleLoginSuccess = async (response) => {
+        try {
+            const { credential } = response;
+            const res = await axios.post('/api/auth/google-login', { idToken: credential });
+            localStorage.setItem('token', res.data.token);
+            navigate('/threads');
+        } catch (err) {
+            setError(err.response?.data?.msg || 'Error during Google login');
+        }
     };
+
+    const handleGoogleLoginFailure = (response) => {
+        setError('Google login failed. Please try again.');
+    };
+
     return (
-        <LoginContainer>
-            <LoginForm onSubmit={handleLogin}>
-                <Title>Login</Title>
-                {error && <ErrorMessage>{error}</ErrorMessage>}
-                <Input
-                    type="email"
-                    placeholder="Email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    required
-                />
-                <Input
-                    type="password"
-                    placeholder="Password"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    required
-                />
-                <Button type="submit">Login</Button>
-            </LoginForm>
-            <AccountText>
-                Don't have an account?
-                <a href='/registration' >
-                    Register
-                </a>
-            </AccountText>
-        </LoginContainer>
+        <GoogleOAuthProvider clientId="155518430596-lgh9d0eu2nfrhedur1khh6oct07tc550.apps.googleusercontent.com">
+            <LoginContainer LoginContainer >
+                <LoginForm onSubmit={handleLogin}>
+                    <Title>Login</Title>
+                    {error && <ErrorMessage>{error}</ErrorMessage>}
+                    <Input
+                        type="email"
+                        placeholder="Email"
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        required
+                    />
+                    <Input
+                        type="password"
+                        placeholder="Password"
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                        required
+                    />
+                    <Button type="submit">Login</Button>
+                </LoginForm>
+                <AccountText>
+
+                    Don't have an account?
+                    <a href='/registration' >
+                        Register
+                    </a>
+                </AccountText>
+
+                <div style={{ marginTop: '20px' }}>
+                    <GoogleLogin
+                        onSuccess={handleGoogleLoginSuccess}
+                        onError={() => setError('Google login failed')}
+                    />
+                </div>
+            </LoginContainer >
+        </GoogleOAuthProvider >
     );
 }
 
