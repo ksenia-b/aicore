@@ -1,99 +1,138 @@
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useState } from 'react';
+import axios from 'axios';
+import { NavLink, useNavigate } from 'react-router-dom';
+import styled from 'styled-components';
+
+// Styled Components
+const RegisterContainer = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100vh;
+  background-color: #f7f7f7;
+`;
+
+const RegisterForm = styled.form`
+  display: flex;
+  flex-direction: column;
+  background-color: #fff;
+  padding: 20px;
+  border-radius: 10px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  width: 300px;
+`;
+
+const Title = styled.h2`
+  margin-bottom: 20px;
+  text-align: center;
+  color: #333;
+`;
+
+const Input = styled.input`
+  margin-bottom: 15px;
+  padding: 10px;
+  border: 1px solid #ddd;
+  border-radius: 5px;
+  font-size: 16px;
+`;
+
+const Button = styled.button`
+  padding: 10px;
+  background-color: #007bff;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 16px;
+  transition: background-color 0.3s;
+
+  &:hover {
+    background-color: #0056b3;
+  }
+`;
+
+const ErrorMessage = styled.p`
+  color: red;
+  font-size: 14px;
+  margin-bottom: 15px;
+`;
+
+const AccountText = styled.p`
+  text-align: center;
+  margin-top: 10px;
+`;
+
 
 function Registration() {
-    const [formData, setFormData] = useState({
-        username: "",
-        email: "",
-        password: "",
-        confirmPassword: ""
-    });
-
-    const [errors, setErrors] = useState({});
+    const [username, setUsername] = useState('');
+    const [email, setEmail] = useState('');
+    const [password, setPassword] = useState('');
+    const [confirmPassword, setConfirmPassword] = useState('');
+    const [error, setError] = useState('');
     const navigate = useNavigate();
 
-    const handleChange = (e) => {
-        setFormData({ ...formData, [e.target.name]: e.target.value });
-    };
-
-    const validateForm = () => {
-        let formErrors = {};
-
-        if (!formData.username) formErrors.username = "Username is required";
-        if (!formData.email) formErrors.email = "Email is required";
-        if (!formData.password) formErrors.password = "Password is required";
-        if (formData.password !== formData.confirmPassword)
-            formErrors.confirmPassword = "Passwords do not match";
-
-        return formErrors;
-    };
-
-    const handleSubmit = (e) => {
+    const handleRegister = async (e) => {
         e.preventDefault();
-        const formErrors = validateForm();
-
-        if (Object.keys(formErrors).length === 0) {
-            console.log("Form submitted", formData);
-
-            navigate("/login");
-        } else {
-            setErrors(formErrors);
+        if (password !== confirmPassword) {
+            setError("Passwords do not match");
+            return;
+        }
+        try {
+            const res = await axios.post('/api/auth/register', {
+                username,
+                email,
+                password,
+                confirmPassword
+            });
+            localStorage.setItem('token', res.data.token);
+            navigate('/threads');
+        } catch (err) {
+            setError(err.response.data.msg || 'Error during registration');
         }
     };
 
     return (
-        <div className="registration-form">
-            <h2>Register</h2>
-            <form onSubmit={handleSubmit}>
-                <div>
-                    <label>Username</label>
-                    <input
-                        type="text"
-                        name="username"
-                        value={formData.username}
-                        onChange={handleChange}
-                    />
-                    {errors.username && <p className="error">{errors.username}</p>}
-                </div>
-
-                <div>
-                    <label>Email</label>
-                    <input
-                        type="email"
-                        name="email"
-                        value={formData.email}
-                        onChange={handleChange}
-                    />
-                    {errors.email && <p className="error">{errors.email}</p>}
-                </div>
-
-                <div>
-                    <label>Password</label>
-                    <input
-                        type="password"
-                        name="password"
-                        value={formData.password}
-                        onChange={handleChange}
-                    />
-                    {errors.password && <p className="error">{errors.password}</p>}
-                </div>
-
-                <div>
-                    <label>Confirm Password</label>
-                    <input
-                        type="password"
-                        name="confirmPassword"
-                        value={formData.confirmPassword}
-                        onChange={handleChange}
-                    />
-                    {errors.confirmPassword && (
-                        <p className="error">{errors.confirmPassword}</p>
-                    )}
-                </div>
-
-                <button type="submit">Register</button>
-            </form>
-        </div>
+        <RegisterContainer>
+            <RegisterForm onSubmit={handleRegister}>
+                <Title>Register</Title>
+                {error && <ErrorMessage>{error}</ErrorMessage>}
+                <Input
+                    type="text"
+                    placeholder="Username"
+                    value={username}
+                    onChange={(e) => setUsername(e.target.value)}
+                    required
+                />
+                <Input
+                    type="email"
+                    placeholder="Email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    required
+                />
+                <Input
+                    type="password"
+                    placeholder="Password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    required
+                />
+                <Input
+                    type="password"
+                    placeholder="Confirm Password"
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    required
+                />
+                <Button type="submit">Register</Button>
+            </RegisterForm>
+            <AccountText>
+                Already have an account?  <a href='/login' >
+                    Login
+                </a>
+            </AccountText>
+        </RegisterContainer>
     );
 }
 
