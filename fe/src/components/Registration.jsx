@@ -1,9 +1,9 @@
 import { useState } from 'react';
 import axios from 'axios';
-import { NavLink, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
+import { GoogleOAuthProvider, GoogleLogin } from '@react-oauth/google';
 import styled from 'styled-components';
 
-// Styled Components
 const RegisterContainer = styled.div`
   display: flex;
   flex-direction: column;
@@ -63,7 +63,6 @@ const AccountText = styled.p`
   margin-top: 10px;
 `;
 
-
 function Registration() {
     const [username, setUsername] = useState('');
     const [email, setEmail] = useState('');
@@ -71,6 +70,18 @@ function Registration() {
     const [confirmPassword, setConfirmPassword] = useState('');
     const [error, setError] = useState('');
     const navigate = useNavigate();
+
+    const handleGoogleLoginSuccess = async (response) => {
+        try {
+            const { credential } = response;
+            const res = await axios.post('/api/auth/google-login', { token: credential });
+            localStorage.setItem('token', res.data.token);
+            navigate('/threads');
+        } catch (err) {
+            setError(err.response?.data?.msg || 'Error during Google login');
+        }
+    };
+
 
     const handleRegister = async (e) => {
         e.preventDefault();
@@ -93,7 +104,7 @@ function Registration() {
     };
 
     return (
-        <GoogleOAuthProvider clientId={process.env.REACT_APP_GOOGLE_CLIENT_ID}>
+        <GoogleOAuthProvider clientId={process.env.GOOGLE_CLIENT_ID}>
             <RegisterContainer>
                 <RegisterForm onSubmit={handleRegister}>
                     <Title>Register</Title>
