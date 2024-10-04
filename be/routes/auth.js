@@ -4,13 +4,15 @@ const jwt = require('jsonwebtoken');
 const { OAuth2Client } = require('google-auth-library');
 const dotenv = require('dotenv');
 const UserActivation = require('../models/UserActivation');
+const User = require('../models/User')
 
 dotenv.config();
 const router = express.Router();
-// const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
+const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
 router.post('/api/auth/google-login', async (req, res) => {
     const { idToken } = req.body;
+    console.log("idToken = ",)
 
     try {
         const ticket = await client.verifyIdToken({
@@ -22,6 +24,7 @@ router.post('/api/auth/google-login', async (req, res) => {
         const { email, sub: googleId } = payload;
 
         let user = await User.findOne({ googleId });
+        console.log("user find = ", user)
         if (!user) {
             user = new User({
                 username: email.split('@')[0],

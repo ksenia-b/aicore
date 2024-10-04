@@ -99,7 +99,9 @@ function Login() {
     const handleGoogleLoginSuccess = async (response) => {
         try {
             const { credential } = response;
+            console.log("credential = ", credential);
             const res = await axios.post('/api/auth/google-login', { idToken: credential });
+            console.log("res = ", res)
             localStorage.setItem('token', res.data.token);
             navigate('/threads');
         } catch (err) {
