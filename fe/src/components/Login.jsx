@@ -4,7 +4,10 @@ import { useNavigate } from 'react-router-dom';
 import { GoogleLogin } from '@react-oauth/google';
 import { GoogleOAuthProvider } from '@react-oauth/google';
 import styled from 'styled-components';
+import Navbar from './NavBar';
+import { useAuth } from '../context/AuthContext';
 
+axios.defaults.baseURL = 'http://localhost:5002';
 
 const LoginContainer = styled.div`
   display: flex;
@@ -83,13 +86,15 @@ function Login() {
     const [password, setPassword] = useState('');
     const [error, setError] = useState('');
     const navigate = useNavigate();
-    console.log(import.meta.env.VITE_GOOGLE_CLIENT_ID);
+    const { login } = useAuth();
+    // console.log(import.meta.env.VITE_GOOGLE_CLIENT_ID);
 
     const handleLogin = async (e) => {
         e.preventDefault();
         try {
             const res = await axios.post('/api/auth/login', { email, password });
-            localStorage.setItem('token', res.data.token);
+            // localStorage.setItem('token', res.data.token);
+            login({ email }, res.data.token);
             navigate('/threads');
         } catch (err) {
             setError(err.response.data.msg || 'Invalid email or password');
@@ -99,58 +104,66 @@ function Login() {
     const handleGoogleLoginSuccess = async (response) => {
         try {
             const { credential } = response;
-            console.log("credential = ", credential);
             const res = await axios.post('/api/auth/google-login', { idToken: credential });
-            console.log("res = ", res)
-            localStorage.setItem('token', res.data.token);
+            debugger
+            console.log("email: res.data.user.email }, res.data.token = ", res.data.user.email, res.data.token)
+            login({ email: res.data.user.email, token: res.data.token });
             navigate('/threads');
         } catch (err) {
-            setError(err.response?.data?.msg || 'Error during Google login');
+            if (err.response && err.response.status === 400) {
+                setError('This email is already registered. Please login instead.');
+            } else {
+                console.log("err.response?.data?.msg ", err.response?.data?.msg)
+                setError(err.response?.data?.msg || 'Error during Google login');
+            }
         }
     };
 
     const handleGoogleLoginFailure = (response) => {
+        console.log("erorro during login, response = ", response)
         setError('Google login failed. Please try again.');
     };
 
     return (
-        <GoogleOAuthProvider clientId="155518430596-lgh9d0eu2nfrhedur1khh6oct07tc550.apps.googleusercontent.com">
-            <LoginContainer LoginContainer >
-                <LoginForm onSubmit={handleLogin}>
-                    <Title>Login</Title>
-                    {error && <ErrorMessage>{error}</ErrorMessage>}
-                    <Input
-                        type="email"
-                        placeholder="Email"
-                        value={email}
-                        onChange={(e) => setEmail(e.target.value)}
-                        required
-                    />
-                    <Input
-                        type="password"
-                        placeholder="Password"
-                        value={password}
-                        onChange={(e) => setPassword(e.target.value)}
-                        required
-                    />
-                    <Button type="submit">Login</Button>
-                </LoginForm>
-                <AccountText>
+        <> <Navbar />
+            <GoogleOAuthProvider clientId="155518430596-lgh9d0eu2nfrhedur1khh6oct07tc550.apps.googleusercontent.com">
+                <LoginContainer LoginContainer >
+                    <LoginForm onSubmit={handleLogin}>
+                        <Title>Login</Title>
+                        {error && <ErrorMessage>{error}</ErrorMessage>}
+                        <Input
+                            type="email"
+                            placeholder="Email"
+                            value={email}
+                            onChange={(e) => setEmail(e.target.value)}
+                            required
+                        />
+                        <Input
+                            type="password"
+                            placeholder="Password"
+                            value={password}
+                            onChange={(e) => setPassword(e.target.value)}
+                            required
+                        />
+                        <Button type="submit">Login</Button>
+                    </LoginForm>
+                    <AccountText>
 
-                    Don't have an account?
-                    <a href='/registration' >
-                        Register
-                    </a>
-                </AccountText>
+                        Don't have an account?
+                        <a href='/registration' >
+                            Register
+                        </a>
+                    </AccountText>
 
-                <div style={{ marginTop: '20px' }}>
-                    <GoogleLogin
-                        onSuccess={handleGoogleLoginSuccess}
-                        onError={() => setError('Google login failed')}
-                    />
-                </div>
-            </LoginContainer >
-        </GoogleOAuthProvider >
+                    <div style={{ marginTop: '20px' }}>
+                        <GoogleLogin
+                            onSuccess={handleGoogleLoginSuccess}
+                            onError={handleGoogleLoginFailure}
+                        />
+                    </div>
+                </LoginContainer >
+            </GoogleOAuthProvider >
+        </>
     );
 }
 

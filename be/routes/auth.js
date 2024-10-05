@@ -23,11 +23,11 @@ router.post('/api/auth/google-login', async (req, res) => {
         const payload = ticket.getPayload();
         const { email, sub: googleId } = payload;
 
-        let user = await User.findOne({ googleId });
+        let user = await User.findOne({ email });
         console.log("user find = ", user)
         if (!user) {
             user = new User({
-                username: email.split('@')[0],
+                name: email.split('@')[0],
                 email,
                 googleId,
             });
@@ -38,7 +38,12 @@ router.post('/api/auth/google-login', async (req, res) => {
             expiresIn: '1h',
         });
 
-        res.json({ token });
+        res.json({
+            user: {
+                "email": email
+            },
+            token: token
+        });
     } catch (error) {
         console.error(error);
         res.status(500).json({ msg: 'Internal server error' });
@@ -50,7 +55,7 @@ router.post('/login', async (req, res) => {
     console.log("here 1", req.body);
     const { email, password } = req.body;
     try {
-        const user = await UserActivation.findOne({ email });
+        const user = await User.findOne({ email });
         console.log("user = ", user);
 
         if (!user) return res.status(400).json({ msg: "user not found" });

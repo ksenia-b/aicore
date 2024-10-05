@@ -12,16 +12,21 @@ export const AuthProvider = ({ children }) => {
 
     useEffect(() => {
         const storedUser = localStorage.getItem('user');
-        if (storedUser) {
+        const storedToken = localStorage.getItem('token');
+        console.log("here1")
+        if (storedUser && storedToken) {
             setUser(JSON.parse(storedUser));
             setIsAuthenticated(true);
         }
     }, []);
 
     const login = (userData) => {
+        console.log("userData = ", userData)
+        const { email, token } = userData;
         setUser(userData);
         setIsAuthenticated(true);
-        localStorage.setItem('user', JSON.stringify(userData));
+        localStorage.setItem('email', JSON.stringify(userData));
+        localStorage.setItem('token', token);
         navigate('/threads');
     };
 
@@ -29,6 +34,7 @@ export const AuthProvider = ({ children }) => {
         setUser(null);
         setIsAuthenticated(false);
         localStorage.removeItem('user');
+        localStorage.removeItem('token');
         navigate('/login');
     };
 
