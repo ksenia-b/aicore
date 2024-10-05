@@ -105,7 +105,7 @@ function Login() {
         try {
             const { credential } = response;
             const res = await axios.post('/api/auth/google-login', { idToken: credential });
-            debugger
+
             console.log("email: res.data.user.email }, res.data.token = ", res.data.user.email, res.data.token)
             login({ email: res.data.user.email, token: res.data.token });
             navigate('/threads');
@@ -125,7 +125,7 @@ function Login() {
     };
 
     return (
-        <> <Navbar />
+        <>
             <GoogleOAuthProvider clientId="155518430596-lgh9d0eu2nfrhedur1khh6oct07tc550.apps.googleusercontent.com">
                 <LoginContainer LoginContainer >
                     <LoginForm onSubmit={handleLogin}>

@@ -12,7 +12,6 @@ const AuthRoute = ({ children }) => {
 
     return (
         <>
-            <Navbar />
             {children}
         </>
     );
